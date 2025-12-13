@@ -1,0 +1,44 @@
+.app-bar {
+  background-color: #121212 !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5) !important;
+  width: 100%;
+  font-family: 'Cormorant', serif !important; 
+  font-size: 1.3rem !important;
+  
+}
+.app-bar .MuiBadge-badge {
+  top: 8px;
+  right: 8px;
+  background-color: #d32f2f;
+  color: white;
+}
+
+.app-bar * {
+  font-family: 'Cormorant', serif !important;
+  font-size: inherit !important;
+}
+
+.app-bar .MuiToolbar-root {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 16px;
+  font-family: inherit !important; 
+}
+
+.right-buttons {
+  display: flex;
+  gap: 32px;
+  font-family: inherit !important;
+}
+
+.app-bar .MuiButton-root {
+  color: white !important;
+  text-transform: none;
+  font-weight: 500;
+  letter-spacing: normal;
+  font-family: 'Cormorant', serif !important; /* Явное указание для кнопок */
+}
+
+.app-bar .MuiButton-root:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}

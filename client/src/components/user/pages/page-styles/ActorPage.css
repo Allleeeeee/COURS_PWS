@@ -1,0 +1,37 @@
+.actor-container {
+    padding: 32px;
+    max-width: 1200px;
+    margin: 0 auto;
+    color: white;
+    font-family: 'Cormorant', serif; 
+  }
+  .actor-container *{
+    font-family: 'Cormorant', serif !important;
+  };
+  
+  .loading, .not-found {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: white;
+  }
+  
+  .actor-header {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  
+  .actor-info {
+    flex: 1;
+    min-width: 300px;
+  }
+  
+  .shows-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }

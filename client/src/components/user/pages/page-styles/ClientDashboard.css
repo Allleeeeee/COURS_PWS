@@ -1,0 +1,9 @@
+.main-user-container {
+    width: 100vw;
+    font-family: 'Cormorant', serif;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+  }
+.main-user-container *{
+  font-family: 'Cormorant', serif !important;
+};
+  

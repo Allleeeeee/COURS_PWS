@@ -1,0 +1,9 @@
+.theatres-container{
+    font-family: 'Cormorant', serif; 
+  /* font-size: 1.6rem; */
+}
+
+.theatres-container * {
+  font-family: 'Cormorant', serif !important;
+  /* font-size: inherit !important; */
+}

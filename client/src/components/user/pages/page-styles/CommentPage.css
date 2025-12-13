@@ -1,0 +1,63 @@
+.comment-page {
+  min-height: 100vh;
+  background-color: #121212;
+  color: white;
+}
+
+.comment-page .MuiPaper-root {
+  background-color: #2a2a2a;
+  color: white;
+}
+
+.comment-page .MuiTextField-root .MuiOutlinedInput-root {
+  color: white;
+}
+
+.comment-page .MuiTextField-root .MuiOutlinedInput-root fieldset {
+  border-color: #555;
+}
+
+.comment-page .MuiTextField-root .MuiOutlinedInput-root:hover fieldset {
+  border-color: #d32f2f;
+}
+
+.comment-page .MuiTextField-root .MuiOutlinedInput-root.Mui-focused fieldset {
+  border-color: #d32f2f;
+}
+
+.comment-page .MuiInputLabel-root {
+  color: #aaa;
+}
+
+.comment-page .MuiInputLabel-root.Mui-focused {
+  color: #d32f2f;
+}
+
+.comment-page .MuiRating-root {
+  color: #d32f2f;
+}
+
+.comment-page .MuiChip-root {
+  transition: all 0.3s ease;
+}
+
+.comment-page .MuiChip-root:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Анимация появления комментариев */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.comment-page .MuiBox-root > .MuiBox-root {
+  animation: fadeIn 0.3s ease forwards;
+}
