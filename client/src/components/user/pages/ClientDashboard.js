@@ -1,9 +1,9 @@
-import { Box, Typography, Button, Divider, Avatar, Paper, CircularProgress, Grid, TextField, Tabs, Tab, Rating, Chip } from "@mui/material";
+import { Box, Typography, Button, Divider,Dialog, DialogTitle,DialogContent,DialogActions,Avatar, Paper, CircularProgress, Grid, TextField, Tabs, Tab, Rating, Chip } from "@mui/material";
 import { useContext, useEffect, useState } from "react";
 import { Context } from "../../..";
 import { useNavigate } from "react-router-dom";
 import { 
-  Email, 
+  Email,
   Person, 
   ExitToApp, 
   Home, 
@@ -59,6 +59,22 @@ const ClientDashboard = observer(() => {
   const [userComments, setUserComments] = useState([]);
   const [loadingComments, setLoadingComments] = useState(false);
   const [commentsGroupedByShow, setCommentsGroupedByShow] = useState({});
+  // Добавьте это в начало компонента с другими состояниями
+const [cancelTicketId, setCancelTicketId] = useState(null);
+
+// Добавьте функцию подтверждения отмены
+const handleConfirmCancel = async () => {
+  if (cancelTicketId) {
+    try {
+      await store.deleteTicket(cancelTicketId);
+      setTickets(prev => prev.filter(ticket => ticket.id !== cancelTicketId));
+      setCancelTicketId(null);
+    } catch (err) {
+      console.error('Cancel failed:', err);
+      setCancelTicketId(null);
+    }
+  }
+};
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -438,19 +454,27 @@ const ClientDashboard = observer(() => {
     return new Date(b.show.date) - new Date(a.show.date);
   });
 
-  // Активные билеты (без оцененных и не истёкших)
-  const activeTickets = sortedTickets.filter(ticket => {
-    const isInactive = ticket.ticketInfo.status === 'Не активно';
+  // ИЗМЕНЕНА ЛОГИКА: Прошедшие неоценённые билеты для отображения
+  const unratedPastTickets = sortedTickets.filter(ticket => {
+    const isPast = ticket.ticketInfo?.status === 'Не активно'; // Билет уже прошел
+    const isRated = ticket.hasRated; // Проверяем, оценен ли
+    return isPast && !isRated; // Только прошедшие и неоценённые
+  });
+
+  // Активные (будущие) билеты
+  const upcomingTickets = sortedTickets.filter(ticket => {
+    const isInactive = ticket.ticketInfo?.status === 'Не активно';
     const isPast = new Date(ticket.startTime) < new Date();
-    return !isInactive && !isPast && !ticket.hasRated;
+    return !isInactive && !isPast;
   });
 
   // Оцененные билеты для истории
   const ratedTickets = sortedTickets.filter(ticket => ticket.hasRated);
 
   const hasTickets = tickets.length > 0;
-  const hasActiveTickets = activeTickets.length > 0;
+  const hasUnratedPastTickets = unratedPastTickets.length > 0;
   const hasRatedTickets = ratedTickets.length > 0;
+  const hasUpcomingTickets = upcomingTickets.length > 0;
   const hasRecommendationData = userGenres.length > 0 || userActors.length > 0 || userPlaywrights.length > 0;
   const hasComments = userComments.length > 0;
 
@@ -518,7 +542,7 @@ const ClientDashboard = observer(() => {
                   }
                 }}
               >
-                Мои билеты ({activeTickets.length})
+                Мои билеты
               </Button>
               
               <Button
@@ -732,64 +756,270 @@ const ClientDashboard = observer(() => {
         {/* Основной контент */}
         <Box sx={{ flexGrow: 1 }}>
           {/* Вкладка "Мои билеты" */}
-          {activeMainTab === 0 && (
-            <>
-              <Typography variant="h4" sx={{ 
-                mb: 3,
-                fontWeight: 700,
-                color: 'white',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1
-              }}>
-                <ConfirmationNumber fontSize="large" sx={{color:'#d32f2f'}} />
-                Мои билеты
-              </Typography>
 
-              {loading ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-                  <CircularProgress color="secondary" />
-                </Box>
-              ) : !hasActiveTickets ? (
-                <Paper elevation={4} sx={{ 
-                  p: 4,
-                  backgroundColor: '#2a2a2a',
-                  textAlign: 'center',
-                  borderRadius: 2
-                }}>
-                  <Typography variant="h5" sx={{ mb: 2, color:"white" }}>
-                    У вас пока нет активных билетов
-                  </Typography>
-                  <Typography variant="body1" sx={{ color: '#aaa', mb: 3 }}>
-                    Приобретите билеты, чтобы получать персонализированные рекомендации!
-                  </Typography>
-                  <Button 
-                    variant="contained" 
-                    onClick={() => navigate('/')}
-                    sx={{
-                      bgcolor: '#d32f2f',
-                      '&:hover': { bgcolor: '#b71c1c' }
-                    }}
-                  >
-                    Посмотреть афишу
-                  </Button>
-                </Paper>
-              ) : (
-                <Grid container spacing={3}>
-                  {activeTickets.map(ticket => (
-                    <Grid item xs={12} key={ticket.id}>
-                      <TicketCard 
-                        ticket={ticket} 
-                        onDelete={handleDeleteTicket}
-                        onRated={() => handleTicketRated(ticket.id)}
-                      />
+{/* Вкладка "Мои билеты" */}
+{/* Вкладка "Мои билеты" */}
+{activeMainTab === 0 && (
+  <>
+    <Typography variant="h4" sx={{ 
+      mb: 3,
+      fontWeight: 700,
+      color: 'white',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 1
+    }}>
+      <ConfirmationNumber fontSize="large" sx={{color:'#d32f2f'}} />
+      Мои билеты
+    </Typography>
+
+    {loading ? (
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+        <CircularProgress color="secondary" />
+      </Box>
+    ) : !hasTickets ? (
+      <Paper elevation={4} sx={{ 
+        p: 4,
+        backgroundColor: '#2a2a2a',
+        textAlign: 'center',
+        borderRadius: 2
+      }}>
+        <Typography variant="h5" sx={{ mb: 2, color:"white" }}>
+          У вас пока нет билетов
+        </Typography>
+        <Typography variant="body1" sx={{ color: '#aaa', mb: 3 }}>
+          Приобретите билеты на спектакли, чтобы они отображались здесь!
+        </Typography>
+        <Button 
+          variant="contained" 
+          onClick={() => navigate('/')}
+          sx={{
+            bgcolor: '#d32f2f',
+            '&:hover': { bgcolor: '#b71c1c' }
+          }}
+        >
+          Посмотреть афишу
+        </Button>
+      </Paper>
+    ) : (
+      <>
+        {/* Будущие/активные билеты */}
+        {hasUpcomingTickets && (
+          <>
+            <Typography variant="h5" sx={{ 
+              color: 'white', 
+              mb: 2,
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1
+            }}>
+              <AccessTime sx={{ color: '#b71c1c' }} />
+              Предстоящие спектакли
+            </Typography>
+            
+            <Typography variant="body1" sx={{ color: '#aaa', mb: 3 }}>
+              Активные билеты на будущие сеансы:
+            </Typography>
+            
+            <Grid container spacing={3} sx={{ mb: 4 }}>
+              {upcomingTickets.map(ticket => (
+                <Grid item xs={12} key={ticket.id}>
+                  <Paper elevation={4} sx={{ 
+                    p: 3,
+                    backgroundColor: '#1a1a1a',
+                    borderRadius: 2,
+                    borderLeft: '4px solid #b71c1c',
+                    '&:hover': {
+                      backgroundColor: '#222222'
+                    }
+                  }}>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} md={8}>
+                        <Typography variant="h5" sx={{ color: 'white', mb: 1 }}>
+                          {ticket.show.title}
+                        </Typography>
+                        
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                          <Chip 
+                            label={ticket.show.genre} 
+                            size="small"
+                            sx={{ 
+                              backgroundColor: 'rgba(175, 84, 76, 0.2)',
+                              color: '#b71c1c'
+                            }} 
+                          />
+                          <Chip 
+                            label={`${ticket.rowNumber} ряд, ${ticket.seatNumber} место`}
+                            size="small"
+                            sx={{ 
+                              backgroundColor: '#424242',
+                              color: '#aaa'
+                            }} 
+                          />
+                        </Box>
+                        
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <CalendarToday sx={{ fontSize: 16, color: '#b71c1c' }} />
+                            <Typography variant="body2" sx={{ color: '#b71c1c' }}>
+                              {formatSeanceDate(ticket.startTime)}
+                            </Typography>
+                          </Box>
+                          
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <AccessTime sx={{ fontSize: 16, color: '#b71c1c' }} />
+                            <Typography variant="body2" sx={{ color: '#b71c1c' }}>
+                              {formatSeanceTime(ticket.startTime)}
+                            </Typography>
+                          </Box>
+                        </Box>
+                        
+                        <Typography variant="body2" sx={{ color: '#aaa', mb: 2 }}>
+                          <LocationOn sx={{ fontSize: 16, verticalAlign: 'middle', mr: 0.5 }} />
+                          {ticket.show.theatre.name}, {ticket.show.theatre.address}
+                        </Typography>
+                      </Grid>
+                      
+                      <Grid item xs={12} md={4} sx={{ 
+                        display: 'flex', 
+                        flexDirection: 'column',
+                        alignItems: 'stretch',
+                        justifyContent: 'center',
+                        gap: 2
+                      }}>
+                     
+                        
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          onClick={() => setCancelTicketId(ticket.id)}
+                          sx={{
+                            borderColor: '#d32f2f',
+                            color: '#d32f2f',
+                            '&:hover': { 
+                              borderColor: '#b71c1c',
+                              backgroundColor: 'rgba(211, 47, 47, 0.1)'
+                            },
+                            py: 1.5
+                          }}
+                        >
+                          Отменить бронь
+                        </Button>
+                      </Grid>
                     </Grid>
-                  ))}
+                  </Paper>
                 </Grid>
-              )}
-            </>
-          )}
+              ))}
+            </Grid>
+          </>
+        )}
 
+        {/* Прошедшие неоценённые билеты */}
+        {hasUnratedPastTickets && (
+          <>
+            <Typography variant="h5" sx={{ 
+              color: 'white', 
+              mb: 2,
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1
+            }}>
+              <Star sx={{ color: '#d32f2f' }} />
+              Оцените просмотренные спектакли
+            </Typography>
+            
+            <Typography variant="body1" sx={{ color: '#aaa', mb: 3 }}>
+              Эти спектакли уже прошли - оставьте вашу оценку:
+            </Typography>
+            
+            <Grid container spacing={3}>
+              {unratedPastTickets.map(ticket => (
+                <Grid item xs={12} key={ticket.id}>
+                  <TicketCard 
+                    ticket={ticket} 
+                    onDelete={handleDeleteTicket}
+                    onRated={() => handleTicketRated(ticket.id)}
+                  />
+                </Grid>
+              ))}
+            </Grid>
+          </>
+        )}
+
+        {/* Если нет неоценённых билетов, но есть будущие */}
+        {!hasUnratedPastTickets && hasUpcomingTickets && (
+          <Paper elevation={4} sx={{ 
+            p: 4,
+            backgroundColor: '#2a2a2a',
+            textAlign: 'center',
+            borderRadius: 2,
+            mt: 4
+          }}>
+            <Star sx={{ fontSize: 48, color: '#b71c1c', mb: 2 }} />
+            <Typography variant="h5" sx={{ mb: 2, color:"white" }}>
+              Все просмотренные спектакли оценены!
+            </Typography>
+            <Typography variant="body1" sx={{ color: '#aaa', mb: 3 }}>
+              У вас есть {upcomingTickets.length} активных билетов на будущие спектакли.
+              После их посещения вы сможете оставить оценку здесь.
+            </Typography>
+          </Paper>
+        )}
+      </>
+    )}
+
+    {/* Модальное окно подтверждения отмены */}
+    <Dialog
+      open={!!cancelTicketId}
+      onClose={() => setCancelTicketId(null)}
+      PaperProps={{
+        sx: {
+          backgroundColor: '#2a2a2a',
+          color: 'white',
+          borderRadius: 2
+        }
+      }}
+    >
+      <DialogTitle sx={{ color: 'white', fontWeight: 600 }}>
+        Подтверждение отмены
+      </DialogTitle>
+      <DialogContent>
+        <Typography variant="body1" sx={{ color: '#aaa', mb: 2 }}>
+          Вы уверены, что хотите отменить бронирование этого билета?
+        </Typography>
+        <Typography variant="body2" sx={{ color: '#666', fontStyle: 'italic' }}>
+          После отмены билет станет доступен для покупки другим пользователям.
+        </Typography>
+      </DialogContent>
+      <DialogActions sx={{ p: 3, pt: 1 }}>
+        <Button 
+          onClick={() => setCancelTicketId(null)}
+          sx={{ 
+            color: '#aaa',
+            '&:hover': { 
+              color: 'white',
+              backgroundColor: 'rgba(255, 255, 255, 0.05)' 
+            }
+          }}
+        >
+          Нет, оставить
+        </Button>
+        <Button 
+          onClick={handleConfirmCancel}
+          variant="contained"
+          sx={{ 
+            bgcolor: '#d32f2f',
+            '&:hover': { bgcolor: '#b71c1c' }
+          }}
+        >
+          Да, отменить
+        </Button>
+      </DialogActions>
+    </Dialog>
+  </>
+)}
           {/* Вкладка "Куда ещё сходить?" */}
           {activeMainTab === 1 && (
             <>
@@ -1379,7 +1609,7 @@ const ClientDashboard = observer(() => {
                       '&:hover': { bgcolor: '#b71c1c' }
                     }}
                   >
-                    Перейти к билетам
+                    {hasUnratedPastTickets ? "Перейти к оценке" : "Перейти к билетам"}
                   </Button>
                 </Paper>
               ) : (
@@ -1474,12 +1704,8 @@ const ClientDashboard = observer(() => {
                               >
                                 Прокомментировать
                               </Button>
-                              
-                             
                             </Box>
                           </Grid>
-                          
-                          
                         </Grid>
                       </Paper>
                     </Grid>
